@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Class Test</title>
+<style>
+  :root {
+    --ink: #1a1d23;
+    --paper: #fafafa;
+    --line: #dcdde0;
+    --accent: #2f5fa8;
+    --accent-dark: #234a86;
+    --ok: #1a7a4c;
+    --warn: #b5471b;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: var(--sans); background: var(--paper); color: var(--ink);
+  }
+  .hidden { display: none !important; }
+  .center-screen {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px;
+  }
+  .card {
+    background: #fff; border: 1px solid var(--line); border-radius: 8px;
+    padding: 32px; max-width: 420px; width: 100%;
+  }
+  .card h1 { font-size: 1.3rem; margin: 0 0 4px; }
+  .card p.sub { color: #666; margin: 0 0 20px; font-size: 0.9rem; }
+  label { display: block; font-size: 0.85rem; font-weight: 600; margin: 14px 0 4px; }
+  input[type=text], input[type=password] {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; font-size: 1rem;
+  }
+  button {
+    cursor: pointer; border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 600;
+    padding: 10px 18px; font-family: inherit;
+  }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-primary:disabled { background: #9db3cf; cursor: not-allowed; }
+  .btn-ghost { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  .btn-danger { background: #fff; color: var(--warn); border: 1px solid var(--warn); }
+  .error-msg { color: var(--warn); font-size: 0.85rem; margin-top: 10px; min-height: 1em; }
+
+  /* --- exam layout --- */
+  #examScreen { display: none; }
+  .topbar {
+    position: sticky; top: 0; background: #fff; border-bottom: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; z-index: 10;
+  }
+  .topbar .who { font-size: 0.85rem; color: #555; }
+  .timer { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; }
+  .timer.low { color: var(--warn); }
+  .save-status { font-size: 0.75rem; color: #888; margin-left: 12px; }
+
+  .layout { display: flex; min-height: calc(100vh - 53px); }
+  .nav {
+    width: 220px; border-right: 1px solid var(--line); padding: 16px 10px; overflow-y: auto;
+    max-height: calc(100vh - 53px); position: sticky; top: 53px;
+  }
+  .nav h3 { font-size: 0.75rem; text-transform: uppercase; color: #888; margin: 14px 6px 6px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 5px;
+    cursor: pointer; font-size: 0.85rem; margin-bottom: 2px;
+  }
+  .nav-item:hover { background: #f0f1f3; }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; flex-shrink: 0; }
+  .nav-dot.answered { background: var(--ok); }
+  .nav-item.active .nav-dot { background: #fff; }
+
+  .content { flex: 1; padding: 24px 32px; max-width: 800px; }
+  .q-mark { font-size: 0.75rem; color: #888; margin-bottom: 6px; }
+  .q-text { font-size: 1.05rem; margin: 0 0 18px; line-height: 1.5; }
+  .option {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line);
+    border-radius: 6px; margin-bottom: 8px; cursor: pointer;
+  }
+  .option:hover { border-color: var(--accent); }
+  .option.selected { border-color: var(--accent); background: #eef3fb; }
+  .option input { margin: 0; }
+
+  .prog-statement { white-space: pre-wrap; background: #f4f5f6; border-radius: 6px; padding: 14px; margin-bottom: 14px; font-size: 0.92rem; }
+  textarea.code-editor {
+    width: 100%; min-height: 320px; font-family: var(--mono); font-size: 0.9rem; padding: 12px;
+    border: 1px solid var(--line); border-radius: 6px; tab-size: 4; resize: vertical; background: #1e1e1e; color: #d4d4d4;
+  }
+  .prog-actions { display: flex; gap: 10px; margin-top: 10px; align-items: center; }
+  .run-output { margin-top: 10px; font-family: var(--mono); font-size: 0.85rem; white-space: pre-wrap; background: #f4f5f6; border-radius: 6px; padding: 10px; display: none; }
+
+  .footer-nav { display: flex; justify-content: space-between; margin-top: 26px; }
+
+  .submit-bar { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); text-align: center; }
+
+  #resultScreen .card { max-width: 480px; text-align: center; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="center-screen">
+  <div class="card">
+    <h1 id="examTitleLabel">Class Test</h1>
+    <p class="sub">Enter your details to start or resume your test.</p>
+    <label for="nameInput">Your name</label>
+    <input type="text" id="nameInput" autocomplete="off">
+    <label for="rollInput">Roll number</label>
+    <input type="text" id="rollInput" autocomplete="off">
+    <label for="passInput">Test password (given by your teacher)</label>
+    <input type="password" id="passInput" autocomplete="off">
+    <button class="btn-primary" id="loginBtn" style="margin-top:18px;width:100%;">Start / Resume Test</button>
+    <div class="error-msg" id="loginError"></div>
+  </div>
+</div>
+
+<!-- EXAM -->
+<div id="examScreen">
+  <div class="topbar">
+    <div class="who">
+      <strong id="studentNameLabel"></strong>
+      <span class="save-status" id="saveStatus">saved</span>
+    </div>
+    <div class="timer" id="timerLabel">--:--</div>
+  </div>
+  <div class="layout">
+    <div class="nav">
+      <h3>MCQs</h3>
+      <div id="mcqNav"></div>
+      <h3>Programs</h3>
+      <div id="progNav"></div>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<!-- RESULT -->
+<div id="resultScreen" class="center-screen hidden">
+  <div class="card">
+    <h1>Test submitted</h1>
+    <p class="sub">Your answers have been recorded. You can close this tab now.</p>
+  </div>
+</div>
+
+<script type="module">
+import { firebaseConfig, PISTON_URL, STUDENT_PASSWORD } from './firebase-config.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let QUESTIONS = null;
+let student = null;       // {roll, name}
+let subRef = null;        // firestore doc ref for this student's submission
+let state = null;         // local mirror of submission doc
+let currentKind = null;   // 'mcq' | 'prog'
+let currentId = null;
+let saveTimer = null;
+let timerInterval = null;
+let runtimesCache = null;
+
+const DEFAULT_LANGUAGES = ['python', 'java', 'c', 'cpp'];
+const LANG_LABELS = { python: 'Python', java: 'Java', c: 'C', cpp: 'C++' };
+const DEFAULT_STARTERS = {
+  python: '# Read input with input() and print your answer\n',
+  java: 'import java.util.*;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n\n    }\n}\n',
+  c: '#include <stdio.h>\n\nint main() {\n    \n    return 0;\n}\n',
+  cpp: '#include <bits/stdc++.h>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}\n'
+};
+
+async function loadQuestions() {
+  const res = await fetch('./questions.json');
+  QUESTIONS = await res.json();
+  document.getElementById('examTitleLabel').textContent = QUESTIONS.examTitle || 'Class Test';
+}
+
+function setSaveStatus(text) {
+  document.getElementById('saveStatus').textContent = text;
+}
+
+// ---------- LOGIN ----------
+document.getElementById('loginBtn').addEventListener('click', async () => {
+  const name = document.getElementById('nameInput').value.trim();
+  const roll = document.getElementById('rollInput').value.trim();
+  const pass = document.getElementById('passInput').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if (!name || !roll || !pass) { errEl.textContent = 'Enter your name, roll number and the test password.'; return; }
+  if (pass !== STUDENT_PASSWORD) { errEl.textContent = 'Incorrect test password.'; return; }
+
+  document.getElementById('loginBtn').disabled = true;
+  try {
+    student = { roll, name };
+    await loadQuestions();
+    await enterExam();
+  } catch (e) {
+    console.error(e);
+    errEl.textContent = 'Could not connect. Check your internet and try again.';
+  } finally {
+    document.getElementById('loginBtn').disabled = false;
+  }
+});
+
+// ---------- ENTER / RESUME ----------
+async function enterExam() {
+  subRef = doc(db, 'submissions', student.roll);
+  const existing = await getDoc(subRef);
+  const errEl = document.getElementById('loginError');
+
+  if (existing.exists() && existing.data().status === 'submitted') {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('resultScreen').classList.remove('hidden');
+    document.getElementById('resultScreen').style.display = 'flex';
+    return;
+  }
+
+  if (existing.exists()) {
+    // This roll number already has a session. Require the name to match
+    // what was typed originally, so a student can't accidentally (or on
+    // purpose) open someone else's in-progress test just by guessing a roll number.
+    const savedName = (existing.data().name || '').trim().toLowerCase();
+    if (savedName !== student.name.trim().toLowerCase()) {
+      errEl.textContent = 'This roll number is already registered under a different name. Double-check your roll number, or ask your teacher.';
+      return;
+    }
+    // RESUME: restore exactly what was there before. Never wipe anything here.
+    state = existing.data();
+  } else {
+    // Fresh start — this is this roll number's first login, so it locks in the name.
+    state = {
+      name: student.name,
+      status: 'in-progress',
+      startedAt: Date.now(),
+      mcqAnswers: {},
+      programAnswers: {},
+      mcqScore: null, codeScore: null, totalScore: null,
+      lastSaved: Date.now()
+    };
+    // init program answers with starter code so first open isn't blank
+    QUESTIONS.programs.forEach(p => {
+      const allowed = (p.allowedLanguages && p.allowedLanguages.length) ? p.allowedLanguages : DEFAULT_LANGUAGES;
+      const lang = allowed[0];
+      state.programAnswers[p.id] = { language: lang, code: { [lang]: DEFAULT_STARTERS[lang] || '' } };
+    });
+    await setDoc(subRef, { ...state, startedAt: serverTimestamp() });
+  }
+
+  document.getElementById('loginScreen').classList.add('hidden');
+  document.getElementById('examScreen').style.display = 'block';
+  document.getElementById('studentNameLabel').textContent = `${student.name} (${student.roll})`;
+
+  buildNav();
+  selectQuestion('mcq', QUESTIONS.mcq[0]?.id);
+  startTimer();
+}
+
+// ---------- NAV ----------
+function buildNav() {
+  const mcqNav = document.getElementById('mcqNav');
+  const progNav = document.getElementById('progNav');
+  mcqNav.innerHTML = '';
+  progNav.innerHTML = '';
+
+  QUESTIONS.mcq.forEach((q, i) => {
+    const el = document.createElement('div');
+    el.className = 'nav-item';
+    el.dataset.kind = 'mcq'; el.dataset.id = q.id;
+    el.innerHTML = `<span class="nav-dot ${state.mcqAnswers[q.id] !== undefined ? 'answered' : ''}"></span> Q${i + 1}`;
+    el.addEventListener('click', () => selectQuestion('mcq', q.id));
+    mcqNav.appendChild(el);
+  });
+
+  QUESTIONS.programs.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'nav-item';
+    el.dataset.kind = 'prog'; el.dataset.id = p.id;
+    const ans = state.programAnswers[p.id];
+    const hasCode = !!(ans && ans.code && ans.language && (ans.code[ans.language] || '').trim().length > 0);
+    el.innerHTML = `<span class="nav-dot ${hasCode ? 'answered' : ''}"></span> P${i + 1}. ${p.title}`;
+    el.addEventListener('click', () => selectQuestion('prog', p.id));
+    progNav.appendChild(el);
+  });
+}
+
+function refreshNavDots() {
+  document.querySelectorAll('.nav-item').forEach(el => {
+    const kind = el.dataset.kind, id = el.dataset.id;
+    const dot = el.querySelector('.nav-dot');
+    if (kind === 'mcq') dot.classList.toggle('answered', state.mcqAnswers[id] !== undefined);
+    else {
+      const ans = state.programAnswers[id];
+      const hasCode = !!(ans && ans.code && ans.language && (ans.code[ans.language] || '').trim().length > 0);
+      dot.classList.toggle('answered', hasCode);
+    }
+    el.classList.toggle('active', kind === currentKind && id === currentId);
+  });
+}
+
+// ---------- RENDER QUESTION ----------
+function selectQuestion(kind, id) {
+  if (!id) return;
+  currentKind = kind; currentId = id;
+  refreshNavDots();
+  const content = document.getElementById('content');
+
+  if (kind === 'mcq') {
+    const q = QUESTIONS.mcq.find(x => x.id === id);
+    const selected = state.mcqAnswers[id];
+    content.innerHTML = `
+      <div class="q-mark">${q.marks} mark${q.marks > 1 ? 's' : ''}</div>
+      <p class="q-text">${escapeHtml(q.question)}</p>
+      <div id="optionsWrap"></div>
+      <div class="footer-nav">
+        <button class="btn-ghost" id="prevBtn">Previous</button>
+        <button class="btn-ghost" id="nextBtn">Next</button>
+      </div>`;
+    const wrap = document.getElementById('optionsWrap');
+    q.options.forEach((opt, idx) => {
+      const div = document.createElement('div');
+      div.className = 'option' + (selected === idx ? ' selected' : '');
+      div.innerHTML = `<input type="radio" name="opt" ${selected === idx ? 'checked' : ''}> ${escapeHtml(opt)}`;
+      div.addEventListener('click', () => {
+        state.mcqAnswers[id] = idx;
+        selectQuestion('mcq', id); // re-render to show selection
+        scheduleSave();
+      });
+      wrap.appendChild(div);
+    });
+    wireFooterNav('mcq', q.id);
+
+  } else {
+    const p = QUESTIONS.programs.find(x => x.id === id);
+    const ans = state.programAnswers[id];
+    const allowed = (p.allowedLanguages && p.allowedLanguages.length) ? p.allowedLanguages : DEFAULT_LANGUAGES;
+    if (!ans.language || !allowed.includes(ans.language)) ans.language = allowed[0];
+    if (!ans.code) ans.code = {};
+    if (ans.code[ans.language] === undefined) ans.code[ans.language] = DEFAULT_STARTERS[ans.language] || '';
+
+    content.innerHTML = `
+      <div class="q-mark">${p.marks} marks</div>
+      <p class="q-text">${escapeHtml(p.title)}</p>
+      <div class="prog-statement">${escapeHtml(p.statement)}</div>
+      <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:6px;">Language</label>
+      <select id="langSelect" style="margin-bottom:10px; padding:6px 10px; border:1px solid var(--line); border-radius:6px; font-size:0.9rem;">
+        ${allowed.map(l => `<option value="${l}" ${l === ans.language ? 'selected' : ''}>${LANG_LABELS[l] || l}</option>`).join('')}
+      </select>
+      <textarea class="code-editor" id="codeEditor" spellcheck="false">${escapeHtml(ans.code[ans.language] || '')}</textarea>
+      <div class="prog-actions">
+        <button class="btn-ghost" id="runBtn">Run sample test</button>
+        <button class="btn-danger" id="resetBtn">Reset to starter code</button>
+      </div>
+      <div class="run-output" id="runOutput"></div>
+      <div class="footer-nav">
+        <button class="btn-ghost" id="prevBtn">Previous</button>
+        <button class="btn-ghost" id="nextBtn">Next</button>
+      </div>`;
+
+    const editor = document.getElementById('codeEditor');
+    editor.addEventListener('input', () => {
+      ans.code[ans.language] = editor.value;
+      refreshNavDots();
+      scheduleSave();
+    });
+
+    document.getElementById('langSelect').addEventListener('change', (e) => {
+      const newLang = e.target.value;
+      ans.language = newLang;
+      // Switching language never touches code already written in another
+      // language — each language keeps its own saved text.
+      if (ans.code[newLang] === undefined) ans.code[newLang] = DEFAULT_STARTERS[newLang] || '';
+      editor.value = ans.code[newLang];
+      document.getElementById('runOutput').style.display = 'none';
+      refreshNavDots();
+      scheduleSave();
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', () => {
+      if (!confirm(`This clears everything you've written for this program in ${LANG_LABELS[ans.language] || ans.language} and puts back the starter code. Continue?`)) return;
+      ans.code[ans.language] = DEFAULT_STARTERS[ans.language] || '';
+      editor.value = ans.code[ans.language];
+      refreshNavDots();
+      scheduleSave();
+    });
+
+    document.getElementById('runBtn').addEventListener('click', async () => {
+      const out = document.getElementById('runOutput');
+      out.style.display = 'block';
+      out.textContent = 'Running against the first sample test case...';
+      try {
+        const tc = p.testCases[0];
+        const result = await runOnPiston(ans.language, editor.value, tc.input, (n, max) => {
+          if (n > 1) out.textContent = `Execution service is busy — retrying (${n}/${max})...`;
+        }, RUN_DELAYS);
+        const pass = (result.output || '').trim() === (tc.expectedOutput || '').trim();
+        out.textContent = `Input: ${tc.input}\nExpected: ${tc.expectedOutput}\nGot: ${result.output}\n\n${pass ? '✓ Sample passed' : '✗ Sample did not match (other hidden test cases are used for final grading)'}`;
+      } catch (e) {
+        out.textContent = 'Execution service is busy right now. This does not affect your saved code or final grading — Submit retries independently and more patiently. Try Run again in a bit, or just move on.';
+      }
+    });
+
+    wireFooterNav('prog', p.id);
+  }
+}
+
+function wireFooterNav(kind, id) {
+  const list = kind === 'mcq' ? QUESTIONS.mcq : QUESTIONS.programs;
+  const idx = list.findIndex(x => x.id === id);
+  const prevBtn = document.getElementById('prevBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  prevBtn.disabled = idx === 0;
+  prevBtn.addEventListener('click', () => { if (idx > 0) selectQuestion(kind, list[idx - 1].id); });
+  if (idx === list.length - 1) {
+    if (kind === 'mcq' && QUESTIONS.programs.length) {
+      nextBtn.textContent = 'Go to Programs';
+      nextBtn.addEventListener('click', () => selectQuestion('prog', QUESTIONS.programs[0].id));
+    } else {
+      nextBtn.outerHTML = renderSubmitButton();
+    }
+  } else {
+    nextBtn.addEventListener('click', () => selectQuestion(kind, list[idx + 1].id));
+  }
+}
+
+function renderSubmitButton() {
+  setTimeout(() => {
+    document.getElementById('finalSubmitBtn')?.addEventListener('click', submitTest);
+  }, 0);
+  return `<button class="btn-primary" id="finalSubmitBtn">Submit Test</button>`;
+}
+
+// ---------- AUTOSAVE ----------
+function scheduleSave() {
+  setSaveStatus('saving…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 1200);
+}
+async function doSave() {
+  try {
+    await updateDoc(subRef, {
+      mcqAnswers: state.mcqAnswers,
+      programAnswers: state.programAnswers,
+      lastSaved: serverTimestamp()
+    });
+    setSaveStatus('saved');
+  } catch (e) {
+    console.error(e);
+    setSaveStatus('save failed — check connection');
+  }
+}
+// Save immediately if the student closes/reloads the tab
+window.addEventListener('beforeunload', () => { if (subRef && state) doSave(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden' && subRef && state) doSave();
+});
+
+// ---------- TIMER ----------
+function startTimer() {
+  const durationMs = (QUESTIONS.durationMinutes || 90) * 60 * 1000;
+  const startedAtMs = state.startedAt?.toMillis ? state.startedAt.toMillis() : (state.startedAt || Date.now());
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const remaining = startedAtMs + durationMs - Date.now();
+    const label = document.getElementById('timerLabel');
+    if (remaining <= 0) {
+      label.textContent = '00:00'; clearInterval(timerInterval);
+      submitTest();
+      return;
+    }
+    const mins = Math.floor(remaining / 60000);
+    const secs = Math.floor((remaining % 60000) / 1000);
+    label.textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    label.classList.toggle('low', remaining < 5 * 60 * 1000);
+  }, 1000);
+}
+
+// ---------- PISTON ----------
+async function getRuntimes() {
+  if (runtimesCache) return runtimesCache;
+  const res = await fetch(`${PISTON_URL}/runtimes`);
+  runtimesCache = await res.json();
+  return runtimesCache;
+}
+async function runOnPistonOnce(language, code, stdin) {
+  const runtimes = await getRuntimes();
+  const rt = runtimes.find(r => r.language === language || (r.aliases || []).includes(language));
+  if (!rt) throw new Error('Unsupported language: ' + language);
+  const fileNames = {
+    python: 'main.py', java: 'Main.java', c: 'main.c', cpp: 'main.cpp', javascript: 'main.js'
+  };
+  const res = await fetch(`${PISTON_URL}/execute`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      language: rt.language,
+      version: rt.version,
+      files: [{ name: fileNames[language] || 'main.txt', content: code }],
+      stdin: stdin || ''
+    })
+  });
+  if (!res.ok) throw new Error('Piston error ' + res.status);
+  const data = await res.json();
+  const output = (data.run?.stdout || '') + (data.run?.stderr ? '\n' + data.run.stderr : '');
+  return { output };
+}
+
+// delays controls how patient this call is. Run (quick check) uses a short
+// schedule so it fails fast; Submit (final grading) uses a longer one since
+// correctness there matters more than speed.
+async function runOnPiston(language, code, stdin, onAttempt, delays) {
+  delays = delays || [0, 1000, 2500, 5000, 9000];
+  let lastErr;
+  for (let attempt = 1; attempt <= delays.length; attempt++) {
+    if (delays[attempt - 1]) await new Promise(r => setTimeout(r, delays[attempt - 1]));
+    if (onAttempt) onAttempt(attempt, delays.length);
+    try {
+      return await runOnPistonOnce(language, code, stdin);
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr;
+}
+const RUN_DELAYS = [0, 1500];      // fast fail for the sample "Run" button (~1.5s max)
+const GRADE_DELAYS = [0, 1000, 2500, 5000, 9000]; // patient for final grading (~17.5s max per test case)
+
+// ---------- SUBMIT & GRADE ----------
+async function submitTest() {
+  if (state.status === 'submitted') return;
+  if (!confirm('Submit the test now? You will not be able to change your answers after this.')) {
+    return;
+  }
+  const progressEl = document.createElement('p');
+  progressEl.textContent = 'Submitting and grading your programs, please wait — do not close this tab…';
+  document.getElementById('content').innerHTML = '';
+  document.getElementById('content').appendChild(progressEl);
+
+  // MCQ scoring
+  let mcqScore = 0;
+  QUESTIONS.mcq.forEach(q => {
+    if (state.mcqAnswers[q.id] === q.answer) mcqScore += q.marks;
+  });
+
+  // Code scoring (auto-grade against every test case; each call retries with
+  // backoff on its own, since the execution service can be busy under load).
+  // Each test case is graded independently — a slow/failed attempt on one
+  // test case never skips or shortcuts the others.
+  let codeScore = 0;
+  const codeResults = {};
+  let progNum = 0;
+  for (const p of QUESTIONS.programs) {
+    progNum++;
+    const progAns = state.programAnswers[p.id] || {};
+    const lang = progAns.language || ((p.allowedLanguages && p.allowedLanguages[0]) || DEFAULT_LANGUAGES[0]);
+    const code = progAns.code?.[lang] || '';
+    let passed = 0;
+    let tcNum = 0;
+    for (const tc of p.testCases) {
+      tcNum++;
+      progressEl.textContent = `Grading program ${progNum}/${QUESTIONS.programs.length} — test case ${tcNum}/${p.testCases.length}...`;
+      try {
+        const r = await runOnPiston(lang, code, tc.input, (n, max) => {
+          if (n > 1) progressEl.textContent = `Grading program ${progNum}/${QUESTIONS.programs.length} — test case ${tcNum}/${p.testCases.length} (retry ${n}/${max}, service busy)...`;
+        }, GRADE_DELAYS);
+        if ((r.output || '').trim() === (tc.expectedOutput || '').trim()) passed++;
+      } catch (e) {
+        // Every retry attempt was exhausted for this specific test case.
+        // It's marked as not-passed rather than skipped, and recorded so
+        // you can spot it and use "Regrade" in admin.html afterward.
+        codeResults[p.id + '_' + tcNum + '_error'] = true;
+      }
+    }
+    const score = p.testCases.length ? (passed / p.testCases.length) * p.marks : 0;
+    codeScore += score;
+    codeResults[p.id] = { passed, total: p.testCases.length, score, language: lang };
+  }
+
+  state.status = 'submitted';
+  state.mcqScore = mcqScore;
+  state.codeScore = Math.round(codeScore * 100) / 100;
+  state.totalScore = mcqScore + state.codeScore;
+  state.codeResults = codeResults;
+
+  await updateDoc(subRef, {
+    status: 'submitted',
+    mcqScore: state.mcqScore,
+    codeScore: state.codeScore,
+    totalScore: state.totalScore,
+    codeResults,
+    submittedAt: serverTimestamp()
+  });
+
+  document.getElementById('examScreen').style.display = 'none';
+  document.getElementById('resultScreen').classList.remove('hidden');
+  document.getElementById('resultScreen').style.display = 'flex';
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+</script>
+</body>
+</html>

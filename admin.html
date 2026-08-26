@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Test Results</title>
+<style>
+  :root { --ink:#1a1d23; --line:#dcdde0; --accent:#2f5fa8; --ok:#1a7a4c; --warn:#b5471b; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: var(--sans); background:#fafafa; color:var(--ink); }
+  .hidden { display:none !important; }
+  .center-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:32px; max-width:380px; width:100%; }
+  input[type=password], input[type=text] { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-size:1rem; margin:10px 0; }
+  button { cursor:pointer; border:none; border-radius:6px; font-weight:600; padding:9px 16px; font-family:inherit; }
+  .btn-primary { background:var(--accent); color:#fff; }
+  .btn-ghost { background:#fff; border:1px solid var(--accent); color:var(--accent); }
+  .wrap { padding: 24px 32px; }
+  .toolbar { display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
+  .toolbar input[type=text] { width:220px; margin:0; }
+  .stat { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 18px; }
+  .stats-row { display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
+  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); font-size:0.88rem; }
+  th { background:#f4f5f6; font-size:0.75rem; text-transform:uppercase; color:#666; cursor:pointer; }
+  tr:last-child td { border-bottom:none; }
+  .status-pill { padding:2px 8px; border-radius:10px; font-size:0.75rem; font-weight:600; }
+  .status-pill.submitted { background:#e4f4ec; color:var(--ok); }
+  .status-pill.in-progress { background:#fdf1e8; color:var(--warn); }
+  #importResult { font-size:0.85rem; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="center-screen">
+  <div class="card">
+    <h2 style="margin-top:0;">Admin login</h2>
+    <input type="password" id="adminPass" placeholder="Admin password">
+    <button class="btn-primary" id="adminLoginBtn" style="width:100%;">Enter</button>
+    <div id="loginErr" style="color:var(--warn); font-size:0.85rem; margin-top:8px;"></div>
+  </div>
+</div>
+
+<div id="dashboard" class="hidden wrap">
+  <h2>Test Results</h2>
+  <div class="stats-row" id="statsRow"></div>
+
+  <div class="toolbar">
+    <input type="text" id="searchBox" placeholder="Search roll or name...">
+    <button class="btn-primary" id="exportBtn">Export results (CSV)</button>
+    <button class="btn-ghost" id="refreshBtn">Refresh</button>
+    <button class="btn-ghost" id="regradeAllBtn">Regrade all submitted</button>
+  </div>
+  <div id="regradeStatus" style="font-size:0.85rem; margin-bottom:8px;"></div>
+
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th data-key="roll">Roll</th>
+        <th data-key="name">Name</th>
+        <th data-key="mcqScore">MCQ</th>
+        <th data-key="codeScore">Code</th>
+        <th data-key="totalScore">Total</th>
+        <th data-key="status">Status</th>
+        <th data-key="submittedAt">Submitted at</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="resultsBody"></tbody>
+  </table>
+</div>
+
+<script type="module">
+import { firebaseConfig, ADMIN_PASSWORD, PISTON_URL } from './firebase-config.js';
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import {
+  getFirestore, collection, getDocs, doc, updateDoc, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let rows = [];
+let rawSubmissions = {}; // roll -> full submission data, needed for regrade
+let QUESTIONS = null;
+let runtimesCache = null;
+let sortKey = 'roll', sortAsc = true;
+
+async function loadQuestions() {
+  if (QUESTIONS) return QUESTIONS;
+  const res = await fetch('./questions.json');
+  QUESTIONS = await res.json();
+  return QUESTIONS;
+}
+
+document.getElementById('adminLoginBtn').addEventListener('click', () => {
+  if (document.getElementById('adminPass').value === ADMIN_PASSWORD) {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('dashboard').classList.remove('hidden');
+    loadResults();
+  } else {
+    document.getElementById('loginErr').textContent = 'Wrong password.';
+  }
+});
+
+document.getElementById('refreshBtn').addEventListener('click', loadResults);
+
+async function loadResults() {
+  const snap = await getDocs(collection(db, 'submissions'));
+  rows = [];
+  snap.forEach(d => {
+    const v = d.data();
+    rawSubmissions[d.id] = v;
+    rows.push({
+      roll: d.id,
+      name: v.name || '',
+      mcqScore: v.mcqScore ?? '',
+      codeScore: v.codeScore ?? '',
+      totalScore: v.totalScore ?? '',
+      status: v.status || 'in-progress',
+      submittedAt: v.submittedAt?.toDate ? v.submittedAt.toDate().toLocaleString() : ''
+    });
+  });
+  renderStats();
+  renderTable();
+}
+
+function renderStats() {
+  const total = rows.length;
+  const submitted = rows.filter(r => r.status === 'submitted').length;
+  const avg = submitted ? (rows.filter(r => r.status === 'submitted').reduce((a, r) => a + (Number(r.totalScore) || 0), 0) / submitted).toFixed(1) : '-';
+  document.getElementById('statsRow').innerHTML = `
+    <div class="stat"><strong>${total}</strong> attempted</div>
+    <div class="stat"><strong>${submitted}</strong> submitted</div>
+    <div class="stat"><strong>${total - submitted}</strong> in progress</div>
+    <div class="stat">avg score: <strong>${avg}</strong></div>`;
+}
+
+function renderTable() {
+  const q = document.getElementById('searchBox').value.toLowerCase();
+  let filtered = rows.filter(r => r.roll.toLowerCase().includes(q) || r.name.toLowerCase().includes(q));
+  filtered.sort((a, b) => {
+    const av = a[sortKey], bv = b[sortKey];
+    if (av === bv) return 0;
+    return (av > bv ? 1 : -1) * (sortAsc ? 1 : -1);
+  });
+  document.getElementById('resultsBody').innerHTML = filtered.map(r => `
+    <tr>
+      <td>${r.roll}</td><td>${r.name}</td>
+      <td>${r.mcqScore}</td><td>${r.codeScore}</td><td><strong>${r.totalScore}</strong></td>
+      <td><span class="status-pill ${r.status}">${r.status}</span></td>
+      <td>${r.submittedAt}</td>
+      <td>${r.status === 'submitted' ? `<button class="btn-ghost regrade-btn" data-roll="${r.roll}">Regrade</button>` : ''}</td>
+    </tr>`).join('');
+  document.querySelectorAll('.regrade-btn').forEach(btn => {
+    btn.addEventListener('click', () => regradeOne(btn.dataset.roll, btn));
+  });
+}
+document.getElementById('searchBox').addEventListener('input', renderTable);
+document.querySelectorAll('th[data-key]').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    sortAsc = (sortKey === key) ? !sortAsc : true;
+    sortKey = key;
+    renderTable();
+  });
+});
+
+// ---- export ----
+document.getElementById('exportBtn').addEventListener('click', () => {
+  const headers = ['roll','name','mcqScore','codeScore','totalScore','status','submittedAt'];
+  const csvRows = [headers.join(',')].concat(
+    rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g, '""')}"`).join(','))
+  );
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `test-results-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+// ---- regrade (safety net if Piston was slow/down during a student's submit) ----
+async function getRuntimes() {
+  if (runtimesCache) return runtimesCache;
+  const res = await fetch(`${PISTON_URL}/runtimes`);
+  runtimesCache = await res.json();
+  return runtimesCache;
+}
+async function runOnPistonOnce(language, code, stdin) {
+  const runtimes = await getRuntimes();
+  const rt = runtimes.find(r => r.language === language || (r.aliases || []).includes(language));
+  if (!rt) throw new Error('Unsupported language: ' + language);
+  const fileNames = { python: 'main.py', java: 'Main.java', c: 'main.c', cpp: 'main.cpp', javascript: 'main.js' };
+  const res = await fetch(`${PISTON_URL}/execute`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ language: rt.language, version: rt.version,
+      files: [{ name: fileNames[language] || 'main.txt', content: code }], stdin: stdin || '' })
+  });
+  if (!res.ok) throw new Error('Piston error ' + res.status);
+  const data = await res.json();
+  return { output: (data.run?.stdout || '') + (data.run?.stderr ? '\n' + data.run.stderr : '') };
+}
+async function runOnPiston(language, code, stdin) {
+  const delays = [0, 1000, 2500, 5000, 9000];
+  let lastErr;
+  for (const d of delays) {
+    if (d) await new Promise(r => setTimeout(r, d));
+    try { return await runOnPistonOnce(language, code, stdin); } catch (e) { lastErr = e; }
+  }
+  throw lastErr;
+}
+
+async function regradeSubmission(roll) {
+  await loadQuestions();
+  const sub = rawSubmissions[roll];
+  let mcqScore = 0;
+  QUESTIONS.mcq.forEach(q => { if (sub.mcqAnswers?.[q.id] === q.answer) mcqScore += q.marks; });
+
+  let codeScore = 0;
+  const codeResults = {};
+  const DEFAULT_LANGUAGES = ['python', 'java', 'c', 'cpp'];
+  for (const p of QUESTIONS.programs) {
+    const progAns = sub.programAnswers?.[p.id] || {};
+    const lang = progAns.language || ((p.allowedLanguages && p.allowedLanguages[0]) || DEFAULT_LANGUAGES[0]);
+    const code = progAns.code?.[lang] || '';
+    let passed = 0;
+    for (const tc of p.testCases) {
+      try {
+        const r = await runOnPiston(lang, code, tc.input);
+        if ((r.output || '').trim() === (tc.expectedOutput || '').trim()) passed++;
+      } catch (e) { /* leave as not-passed */ }
+    }
+    const score = p.testCases.length ? (passed / p.testCases.length) * p.marks : 0;
+    codeScore += score;
+    codeResults[p.id] = { passed, total: p.testCases.length, score, language: lang };
+  }
+
+  const totalScore = mcqScore + Math.round(codeScore * 100) / 100;
+  await updateDoc(doc(db, 'submissions', roll), {
+    mcqScore, codeScore: Math.round(codeScore * 100) / 100, totalScore, codeResults,
+    regradedAt: serverTimestamp()
+  });
+  return totalScore;
+}
+
+async function regradeOne(roll, btn) {
+  btn.disabled = true; btn.textContent = 'Regrading...';
+  try {
+    await regradeSubmission(roll);
+    await loadResults();
+  } catch (e) {
+    console.error(e);
+    alert('Regrade failed for ' + roll + ' — execution service may still be busy. Try again shortly.');
+  }
+}
+
+document.getElementById('regradeAllBtn').addEventListener('click', async () => {
+  const statusEl = document.getElementById('regradeStatus');
+  const submittedRolls = rows.filter(r => r.status === 'submitted').map(r => r.roll);
+  if (!submittedRolls.length) { statusEl.textContent = 'No submitted tests to regrade.'; return; }
+  if (!confirm(`Regrade all ${submittedRolls.length} submitted tests? This re-runs every program against every test case again and can take a while.`)) return;
+  let done = 0;
+  for (const roll of submittedRolls) {
+    statusEl.textContent = `Regrading ${done + 1}/${submittedRolls.length} (${roll})...`;
+    try { await regradeSubmission(roll); } catch (e) { console.error('Failed for', roll, e); }
+    done++;
+  }
+  statusEl.textContent = `Done — regraded ${done} submissions.`;
+  await loadResults();
+});
+</script>
+</body>
+</html>

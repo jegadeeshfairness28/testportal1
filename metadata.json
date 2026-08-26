@@ -1,0 +1,8 @@
+{
+  "name": "Class Test Portal",
+  "description": "A test portal with MCQ questions, programming problems with auto-grading via Piston, live autosave to Firebase, and an admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
