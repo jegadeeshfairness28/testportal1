@@ -1,6 +1,6 @@
 {
   "name": "Class Test Portal",
-  "description": "A test portal with MCQ questions, programming problems with auto-grading via Piston, live autosave to Firebase, and an admin dashboard.",
+  "description": "A 2-page class test portal with zero-API in-browser code execution for 4 languages (Python, JavaScript, Java, C), MCQ questions, instant marks feedback, admin question manager with + buttons, student code inspection by roll number, downloadable CSV reports, and GitHub storage synchronization without Firebase.",
   "requestFramePermissions": [],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"

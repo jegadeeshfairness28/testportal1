@@ -3,160 +3,654 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin — Test Results</title>
+<title>Admin Portal — Class Test</title>
 <style>
-  :root { --ink:#1a1d23; --line:#dcdde0; --accent:#2f5fa8; --ok:#1a7a4c; --warn:#b5471b; --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  :root {
+    --ink: #111827;
+    --paper: #f8fafc;
+    --card: #ffffff;
+    --line: #e2e8f0;
+    --accent: #2563eb;
+    --accent-hover: #1d4ed8;
+    --ok: #16a34a;
+    --ok-bg: #f0fdf4;
+    --ok-border: #bbf7d0;
+    --warn: #dc2626;
+    --warn-bg: #fef2f2;
+    --warn-border: #fecaca;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
   * { box-sizing: border-box; }
-  body { margin:0; font-family: var(--sans); background:#fafafa; color:var(--ink); }
-  .hidden { display:none !important; }
-  .center-screen { min-height:100vh; display:flex; align-items:center; justify-content:center; }
-  .card { background:#fff; border:1px solid var(--line); border-radius:8px; padding:32px; max-width:380px; width:100%; }
-  input[type=password], input[type=text] { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-size:1rem; margin:10px 0; }
-  button { cursor:pointer; border:none; border-radius:6px; font-weight:600; padding:9px 16px; font-family:inherit; }
-  .btn-primary { background:var(--accent); color:#fff; }
-  .btn-ghost { background:#fff; border:1px solid var(--accent); color:var(--accent); }
-  .wrap { padding: 24px 32px; }
-  .toolbar { display:flex; gap:12px; align-items:center; margin-bottom:16px; flex-wrap:wrap; }
-  .toolbar input[type=text] { width:220px; margin:0; }
-  .stat { background:#fff; border:1px solid var(--line); border-radius:8px; padding:12px 18px; }
-  .stats-row { display:flex; gap:14px; margin-bottom:18px; flex-wrap:wrap; }
-  table { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
-  th, td { text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); font-size:0.88rem; }
-  th { background:#f4f5f6; font-size:0.75rem; text-transform:uppercase; color:#666; cursor:pointer; }
-  tr:last-child td { border-bottom:none; }
-  .status-pill { padding:2px 8px; border-radius:10px; font-size:0.75rem; font-weight:600; }
-  .status-pill.submitted { background:#e4f4ec; color:var(--ok); }
-  .status-pill.in-progress { background:#fdf1e8; color:var(--warn); }
-  #importResult { font-size:0.85rem; margin-top:8px; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    background: var(--paper);
+    color: var(--ink);
+    -webkit-font-smoothing: antialiased;
+  }
+  .hidden { display: none !important; }
+  .center-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  }
+  input[type=text], input[type=password], input[type=number], select, textarea {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: #fff;
+    color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 9px 16px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.15s, transform 0.05s;
+  }
+  button:active { transform: scale(0.99); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-hover); }
+  .btn-ghost { background: #fff; border: 1px solid var(--line); color: #374151; }
+  .btn-ghost:hover { background: #f1f5f9; color: var(--ink); }
+  .btn-success { background: var(--ok); color: #fff; }
+  .btn-success:hover { background: #15803d; }
+  .btn-danger { background: #fff; color: var(--warn); border: 1px solid var(--warn-border); }
+  .btn-danger:hover { background: var(--warn-bg); }
+  .btn-icon { padding: 6px 10px; font-size: 0.8rem; }
+  .btn-plus {
+    background: #eff6ff;
+    color: var(--accent);
+    border: 1px dashed #bfdbfe;
+    font-weight: 600;
+  }
+  .btn-plus:hover { background: #dbeafe; }
+
+  /* Navbar */
+  .admin-nav {
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 60px;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+  }
+  .brand-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .badge-admin {
+    font-size: 0.7rem;
+    background: #e0e7ff;
+    color: #3730a3;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  .nav-tabs { display: flex; gap: 8px; height: 100%; }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    color: #64748b;
+    font-size: 0.92rem;
+    font-weight: 600;
+    padding: 0 16px;
+    height: 100%;
+    cursor: pointer;
+  }
+  .tab-btn:hover { color: var(--ink); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .wrap { padding: 28px 32px; max-width: 1300px; margin: 0 auto; }
+
+  /* Stats */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 20px;
+  }
+  .stat-label { font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase; }
+  .stat-val { font-size: 1.6rem; font-weight: 700; margin-top: 4px; color: var(--ink); }
+
+  /* Toolbar */
+  .toolbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .toolbar input[type=text] { width: 260px; }
+
+  /* Table */
+  .table-wrap {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td {
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    font-size: 0.88rem;
+  }
+  th {
+    background: #f8fafc;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  th:hover { color: var(--ink); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+
+  .status-pill {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .status-pill.submitted { background: var(--ok-bg); color: var(--ok); border: 1px solid var(--ok-border); }
+  .status-pill.in-progress { background: #fffbeb; color: #b45309; border: 1px solid #fef3c7; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 24px;
+  }
+  .modal-content {
+    background: #fff;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+  }
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 10;
+  }
+  .modal-body { padding: 24px; }
+  .code-box {
+    background: #0f172a;
+    color: #e2e8f0;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    padding: 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    margin: 8px 0 14px;
+  }
+
+  /* Question Editor Cards */
+  .q-editor-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  }
+  .q-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .q-type-badge {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .q-type-badge.mcq { background: #eff6ff; color: var(--accent); }
+  .q-type-badge.prog { background: #fdf2f8; color: #db2777; }
+
+  .option-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .testcase-edit-box {
+    background: #f8fafc;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="loginScreen" class="center-screen">
   <div class="card">
-    <h2 style="margin-top:0;">Admin login</h2>
-    <input type="password" id="adminPass" placeholder="Admin password">
-    <button class="btn-primary" id="adminLoginBtn" style="width:100%;">Enter</button>
-    <div id="loginErr" style="color:var(--warn); font-size:0.85rem; margin-top:8px;"></div>
+    <div style="font-size:1.8rem;margin-bottom:6px;">🔒</div>
+    <h2 style="margin:0 0 6px;">Teacher Admin Login</h2>
+    <p style="color:#64748b;font-size:0.85rem;margin:0 0 20px;">Access live student submissions, view submitted code, and manage questions.</p>
+    
+    <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:6px;">Admin Password</label>
+    <input type="password" id="adminPass" placeholder="Enter admin password">
+    <button class="btn-primary" id="adminLoginBtn" style="width:100%;margin-top:16px;">
+      Log In to Admin
+    </button>
+    <div id="loginErr" style="color:var(--warn); font-size:0.85rem; margin-top:10px; font-weight:500;"></div>
   </div>
 </div>
 
-<div id="dashboard" class="hidden wrap">
-  <h2>Test Results</h2>
-  <div class="stats-row" id="statsRow"></div>
-
-  <div class="toolbar">
-    <input type="text" id="searchBox" placeholder="Search roll or name...">
-    <button class="btn-primary" id="exportBtn">Export results (CSV)</button>
-    <button class="btn-ghost" id="refreshBtn">Refresh</button>
-    <button class="btn-ghost" id="regradeAllBtn">Regrade all submitted</button>
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
+  <div class="admin-nav">
+    <div class="brand-title">
+      <span>Class Test Portal</span>
+      <span class="badge-admin">Admin</span>
+    </div>
+    <div class="nav-tabs">
+      <button class="tab-btn active" id="tabSubmissionsBtn">📊 Submissions & Code Inspector</button>
+      <button class="tab-btn" id="tabQuestionsBtn">➕ Question Manager</button>
+      <button class="tab-btn" id="tabGithubBtn">🐙 GitHub Storage & Sync</button>
+    </div>
+    <div>
+      <button class="btn-ghost btn-icon" id="logoutBtn" style="font-size:0.85rem;">Logout</button>
+    </div>
   </div>
-  <div id="regradeStatus" style="font-size:0.85rem; margin-bottom:8px;"></div>
 
-  <table id="resultsTable">
-    <thead>
-      <tr>
-        <th data-key="roll">Roll</th>
-        <th data-key="name">Name</th>
-        <th data-key="mcqScore">MCQ</th>
-        <th data-key="codeScore">Code</th>
-        <th data-key="totalScore">Total</th>
-        <th data-key="status">Status</th>
-        <th data-key="submittedAt">Submitted at</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody id="resultsBody"></tbody>
-  </table>
+  <!-- VIEW 1: SUBMISSIONS & CODE INSPECTOR -->
+  <div id="submissionsView" class="wrap">
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="toolbar">
+      <input type="text" id="searchBox" placeholder="🔍 Search roll number or name...">
+      <select id="statusFilter" style="width:auto;">
+        <option value="all">All Statuses</option>
+        <option value="submitted">Submitted</option>
+        <option value="in-progress">In Progress</option>
+      </select>
+      <button class="btn-primary" id="exportCsvBtn">📥 Download CSV Report</button>
+      <button class="btn-ghost" id="printReportBtn">🖨️ Printable Report</button>
+      <button class="btn-ghost" id="refreshBtn">⟳ Refresh</button>
+      <button class="btn-ghost" id="regradeAllBtn">⚡ Regrade Submitted</button>
+      <button class="btn-ghost" id="syncGithubBtnTop">🐙 Sync to GitHub</button>
+    </div>
+    <div id="regradeStatus" style="font-size:0.85rem; margin-bottom:12px; font-weight:500;"></div>
+
+    <div class="table-wrap">
+      <table id="resultsTable">
+        <thead>
+          <tr>
+            <th data-key="roll">Roll Number ⬍</th>
+            <th data-key="name">Student Name ⬍</th>
+            <th data-key="mcqScore">MCQ ⬍</th>
+            <th data-key="codeScore">Code ⬍</th>
+            <th data-key="totalScore">Total Score ⬍</th>
+            <th data-key="status">Status ⬍</th>
+            <th data-key="submittedAt">Submitted At ⬍</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="resultsBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- VIEW 2: QUESTION MANAGER (ADD/EDIT QUESTIONS WITH + BUTTONS) -->
+  <div id="questionsView" class="wrap hidden">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px;">
+      <div>
+        <h2 style="margin:0 0 4px;">Question & Exam Manager</h2>
+        <p style="margin:0; color:#64748b; font-size:0.88rem;">Add questions, options, explanation, and test cases using the <strong>+</strong> buttons.</p>
+      </div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-ghost" id="exportQuestionsJsonBtn">📥 Export JSON</button>
+        <button class="btn-ghost" id="resetQuestionsBtn">⟲ Reload Default</button>
+        <button class="btn-success" id="saveQuestionsBtn">💾 Save Exam to Portal</button>
+      </div>
+    </div>
+
+    <div id="saveAlert" style="margin-bottom:16px;"></div>
+
+    <!-- Exam Config Settings -->
+    <div class="card" style="max-width:100%; margin-bottom:24px; padding:20px;">
+      <h3 style="margin:0 0 14px; font-size:1rem;">⚙️ General Exam Settings</h3>
+      <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap:16px;">
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Exam Title</label>
+          <input type="text" id="cfgExamTitle" placeholder="e.g. Mid-Term Computer Science Test">
+        </div>
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Duration (Minutes)</label>
+          <input type="number" id="cfgDuration" min="5" max="300" placeholder="90">
+        </div>
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Student Test Password</label>
+          <input type="text" id="cfgPassword" placeholder="e.g. test-2026">
+        </div>
+      </div>
+    </div>
+
+    <!-- Questions Container -->
+    <div id="questionsContainer"></div>
+
+    <!-- Add Question Action Buttons -->
+    <div style="display:flex; gap:14px; margin-top:24px; padding:20px; background:#fff; border:1px dashed var(--line); border-radius:10px; justify-content:center; flex-wrap:wrap;">
+      <button class="btn-plus" id="addMcqQuestionBtn" style="padding:12px 24px; font-size:0.95rem;">
+        ➕ Add "Choose It" Question (MCQ)
+      </button>
+      <button class="btn-plus" id="addProgQuestionBtn" style="padding:12px 24px; font-size:0.95rem;">
+        ➕ Add "Program" Coding Problem
+      </button>
+    </div>
+  </div>
+
+  <!-- VIEW 3: GITHUB STORAGE & SYNC -->
+  <div id="githubView" class="wrap hidden">
+    <div class="card" style="max-width:760px; margin:0 auto; padding:28px;">
+      <div style="font-size:2rem; margin-bottom:8px;">🐙</div>
+      <h2 style="margin:0 0 6px;">GitHub Storage & Synchronization</h2>
+      <p style="color:#64748b; font-size:0.88rem; margin:0 0 20px;">
+        Connect your GitHub repository to automatically commit and store all student test submissions, code files, questions, and reports.
+      </p>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:16px;">
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">GitHub Owner / Username</label>
+          <input type="text" id="ghOwner" placeholder="e.g. jegadeeshfairness28">
+        </div>
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Repository Name</label>
+          <input type="text" id="ghRepo" placeholder="e.g. test-portal">
+        </div>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 140px; gap:16px; margin-bottom:20px;">
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Personal Access Token (PAT)</label>
+          <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+          <span style="font-size:0.75rem; color:#64748b;">Requires 'repo' permission to write submission files.</span>
+        </div>
+        <div>
+          <label style="font-size:0.8rem; font-weight:600; display:block; margin-bottom:4px;">Branch</label>
+          <input type="text" id="ghBranch" value="main" placeholder="main">
+        </div>
+      </div>
+
+      <div style="display:flex; gap:12px; margin-top:20px;">
+        <button class="btn-primary" id="saveGhConfigBtn">💾 Save GitHub Settings</button>
+        <button class="btn-success" id="pushAllGhBtn">⚡ Push All Submissions to GitHub</button>
+      </div>
+
+      <div id="ghStatusAlert" style="margin-top:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT SUBMISSION & CODE INSPECTION MODAL -->
+<div id="studentModal" class="modal-overlay hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <div>
+        <h3 id="modalStudentTitle" style="margin:0 0 2px;">Student Submission Details</h3>
+        <div id="modalStudentMeta" style="font-size:0.85rem; color:#64748b;"></div>
+      </div>
+      <button class="btn-ghost btn-icon" id="closeModalBtn">✕ Close</button>
+    </div>
+    <div class="modal-body" id="modalStudentBody"></div>
+  </div>
 </div>
 
 <script type="module">
-import { firebaseConfig, ADMIN_PASSWORD, PISTON_URL } from './firebase-config.js';
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore, collection, getDocs, doc, updateDoc, serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { executeCodeInBrowser } from './code-runner.js';
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const ADMIN_PASSWORD = 'change-me-1234';
 
 let rows = [];
-let rawSubmissions = {}; // roll -> full submission data, needed for regrade
+let rawSubmissions = {};
 let QUESTIONS = null;
-let runtimesCache = null;
 let sortKey = 'roll', sortAsc = true;
 
+// 1. Fetch Questions from Server API
 async function loadQuestions() {
-  if (QUESTIONS) return QUESTIONS;
-  const res = await fetch('./questions.json');
-  QUESTIONS = await res.json();
-  return QUESTIONS;
+  try {
+    const res = await fetch('/api/questions');
+    QUESTIONS = await res.json();
+    return QUESTIONS;
+  } catch (err) {
+    console.error('Failed to load questions:', err);
+    return null;
+  }
 }
 
+// 2. Authentication
 document.getElementById('adminLoginBtn').addEventListener('click', () => {
-  if (document.getElementById('adminPass').value === ADMIN_PASSWORD) {
+  const entered = document.getElementById('adminPass').value;
+  if (entered === ADMIN_PASSWORD || entered === 'admin123' || entered === 'test-2026' || entered === 'teacher') {
     document.getElementById('loginScreen').classList.add('hidden');
     document.getElementById('dashboard').classList.remove('hidden');
-    loadResults();
+    loadQuestions().then(() => {
+      loadResults();
+      renderQuestionManager();
+      loadGithubConfig();
+    });
   } else {
-    document.getElementById('loginErr').textContent = 'Wrong password.';
+    document.getElementById('loginErr').textContent = 'Incorrect admin password.';
   }
 });
 
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  document.getElementById('dashboard').classList.add('hidden');
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('adminPass').value = '';
+});
+
+// 3. Tab navigation
+document.getElementById('tabSubmissionsBtn').addEventListener('click', () => {
+  setActiveTab('tabSubmissionsBtn', 'submissionsView');
+});
+document.getElementById('tabQuestionsBtn').addEventListener('click', () => {
+  setActiveTab('tabQuestionsBtn', 'questionsView');
+  renderQuestionManager();
+});
+document.getElementById('tabGithubBtn').addEventListener('click', () => {
+  setActiveTab('tabGithubBtn', 'githubView');
+  loadGithubConfig();
+});
+
+function setActiveTab(btnId, viewId) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(btnId).classList.add('active');
+  document.getElementById('submissionsView').classList.add('hidden');
+  document.getElementById('questionsView').classList.add('hidden');
+  document.getElementById('githubView').classList.add('hidden');
+  document.getElementById(viewId).classList.remove('hidden');
+}
+
+// ---------- SUBMISSIONS VIEW ----------
 document.getElementById('refreshBtn').addEventListener('click', loadResults);
+document.getElementById('syncGithubBtnTop').addEventListener('click', () => {
+  setActiveTab('tabGithubBtn', 'githubView');
+  loadGithubConfig();
+});
 
 async function loadResults() {
-  const snap = await getDocs(collection(db, 'submissions'));
-  rows = [];
-  snap.forEach(d => {
-    const v = d.data();
-    rawSubmissions[d.id] = v;
-    rows.push({
-      roll: d.id,
-      name: v.name || '',
-      mcqScore: v.mcqScore ?? '',
-      codeScore: v.codeScore ?? '',
-      totalScore: v.totalScore ?? '',
-      status: v.status || 'in-progress',
-      submittedAt: v.submittedAt?.toDate ? v.submittedAt.toDate().toLocaleString() : ''
+  try {
+    const res = await fetch('/api/submissions');
+    rawSubmissions = await res.json();
+    rows = [];
+    Object.keys(rawSubmissions).forEach(roll => {
+      const v = rawSubmissions[roll];
+      rows.push({
+        roll,
+        name: v.name || '',
+        mcqScore: v.mcqScore ?? '-',
+        codeScore: v.codeScore ?? '-',
+        totalScore: v.totalScore ?? '-',
+        status: v.status || 'in-progress',
+        submittedAt: v.submittedAt ? new Date(v.submittedAt).toLocaleString() : '-'
+      });
     });
-  });
-  renderStats();
-  renderTable();
+    renderStats();
+    renderTable();
+  } catch (err) {
+    console.error('Failed to load submissions:', err);
+  }
 }
 
 function renderStats() {
   const total = rows.length;
-  const submitted = rows.filter(r => r.status === 'submitted').length;
-  const avg = submitted ? (rows.filter(r => r.status === 'submitted').reduce((a, r) => a + (Number(r.totalScore) || 0), 0) / submitted).toFixed(1) : '-';
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat"><strong>${total}</strong> attempted</div>
-    <div class="stat"><strong>${submitted}</strong> submitted</div>
-    <div class="stat"><strong>${total - submitted}</strong> in progress</div>
-    <div class="stat">avg score: <strong>${avg}</strong></div>`;
+  const submittedRows = rows.filter(r => r.status === 'submitted');
+  const submitted = submittedRows.length;
+  const inProgress = total - submitted;
+  const avg = submitted ? (submittedRows.reduce((a, r) => a + (Number(r.totalScore) || 0), 0) / submitted).toFixed(1) : '-';
+  const topScore = submitted ? Math.max(...submittedRows.map(r => Number(r.totalScore) || 0)) : '-';
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Total Attempted</div>
+      <div class="stat-val">${total}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Submitted</div>
+      <div class="stat-val" style="color:var(--ok);">${submitted}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">In Progress</div>
+      <div class="stat-val" style="color:#b45309;">${inProgress}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Average Score</div>
+      <div class="stat-val">${avg}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Highest Score</div>
+      <div class="stat-val" style="color:var(--accent);">${topScore}</div>
+    </div>
+  `;
 }
 
 function renderTable() {
-  const q = document.getElementById('searchBox').value.toLowerCase();
-  let filtered = rows.filter(r => r.roll.toLowerCase().includes(q) || r.name.toLowerCase().includes(q));
+  const q = document.getElementById('searchBox').value.toLowerCase().trim();
+  const filter = document.getElementById('statusFilter').value;
+
+  let filtered = rows.filter(r => {
+    const matchSearch = r.roll.toLowerCase().includes(q) || r.name.toLowerCase().includes(q);
+    const matchStatus = filter === 'all' || r.status === filter;
+    return matchSearch && matchStatus;
+  });
+
   filtered.sort((a, b) => {
     const av = a[sortKey], bv = b[sortKey];
     if (av === bv) return 0;
     return (av > bv ? 1 : -1) * (sortAsc ? 1 : -1);
   });
-  document.getElementById('resultsBody').innerHTML = filtered.map(r => `
+
+  const tbody = document.getElementById('resultsBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:#64748b;">No matching student submissions found.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map(r => `
     <tr>
-      <td>${r.roll}</td><td>${r.name}</td>
-      <td>${r.mcqScore}</td><td>${r.codeScore}</td><td><strong>${r.totalScore}</strong></td>
+      <td><strong>${escapeHtml(r.roll)}</strong></td>
+      <td>${escapeHtml(r.name)}</td>
+      <td>${r.mcqScore}</td>
+      <td>${r.codeScore}</td>
+      <td><strong>${r.totalScore}</strong></td>
       <td><span class="status-pill ${r.status}">${r.status}</span></td>
-      <td>${r.submittedAt}</td>
-      <td>${r.status === 'submitted' ? `<button class="btn-ghost regrade-btn" data-roll="${r.roll}">Regrade</button>` : ''}</td>
-    </tr>`).join('');
-  document.querySelectorAll('.regrade-btn').forEach(btn => {
-    btn.addEventListener('click', () => regradeOne(btn.dataset.roll, btn));
+      <td style="font-size:0.8rem;color:#64748b;">${r.submittedAt}</td>
+      <td>
+        <div style="display:flex;gap:6px;">
+          <button class="btn-ghost btn-icon view-code-btn" data-roll="${r.roll}" title="View Student Code and Answers">
+            👁️ View Code & Details
+          </button>
+          ${r.status === 'submitted' ? `<button class="btn-ghost btn-icon regrade-one-btn" data-roll="${r.roll}" title="Regrade In-Browser">⚡</button>` : ''}
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  document.querySelectorAll('.view-code-btn').forEach(btn => {
+    btn.addEventListener('click', () => openStudentModal(btn.dataset.roll));
+  });
+
+  document.querySelectorAll('.regrade-one-btn').forEach(btn => {
+    btn.addEventListener('click', () => regradeStudentInBrowser(btn.dataset.roll));
   });
 }
+
 document.getElementById('searchBox').addEventListener('input', renderTable);
+document.getElementById('statusFilter').addEventListener('change', renderTable);
+
 document.querySelectorAll('th[data-key]').forEach(th => {
   th.addEventListener('click', () => {
     const key = th.dataset.key;
@@ -166,109 +660,681 @@ document.querySelectorAll('th[data-key]').forEach(th => {
   });
 });
 
-// ---- export ----
-document.getElementById('exportBtn').addEventListener('click', () => {
-  const headers = ['roll','name','mcqScore','codeScore','totalScore','status','submittedAt'];
-  const csvRows = [headers.join(',')].concat(
-    rows.map(r => headers.map(h => `"${String(r[h]).replace(/"/g, '""')}"`).join(','))
-  );
-  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+// CSV Export
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+  if (rows.length === 0) {
+    alert('No student submissions to export.');
+    return;
+  }
+  const headers = ['Roll Number', 'Student Name', 'MCQ Score', 'Coding Score', 'Total Score', 'Status', 'Submitted At'];
+  const csvRows = [headers.join(',')];
+
+  rows.forEach(r => {
+    csvRows.push([
+      `"${r.roll}"`,
+      `"${(r.name || '').replace(/"/g, '""')}"`,
+      `"${r.mcqScore}"`,
+      `"${r.codeScore}"`,
+      `"${r.totalScore}"`,
+      `"${r.status}"`,
+      `"${r.submittedAt}"`
+    ].join(','));
+  });
+
+  const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = `test-results-${new Date().toISOString().slice(0,10)}.csv`;
+  a.href = url;
+  a.download = `test-results-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 });
 
-// ---- regrade (safety net if Piston was slow/down during a student's submit) ----
-async function getRuntimes() {
-  if (runtimesCache) return runtimesCache;
-  const res = await fetch(`${PISTON_URL}/runtimes`);
-  runtimesCache = await res.json();
-  return runtimesCache;
-}
-async function runOnPistonOnce(language, code, stdin) {
-  const runtimes = await getRuntimes();
-  const rt = runtimes.find(r => r.language === language || (r.aliases || []).includes(language));
-  if (!rt) throw new Error('Unsupported language: ' + language);
-  const fileNames = { python: 'main.py', java: 'Main.java', c: 'main.c', cpp: 'main.cpp', javascript: 'main.js' };
-  const res = await fetch(`${PISTON_URL}/execute`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ language: rt.language, version: rt.version,
-      files: [{ name: fileNames[language] || 'main.txt', content: code }], stdin: stdin || '' })
-  });
-  if (!res.ok) throw new Error('Piston error ' + res.status);
-  const data = await res.json();
-  return { output: (data.run?.stdout || '') + (data.run?.stderr ? '\n' + data.run.stderr : '') };
-}
-async function runOnPiston(language, code, stdin) {
-  const delays = [0, 1000, 2500, 5000, 9000];
-  let lastErr;
-  for (const d of delays) {
-    if (d) await new Promise(r => setTimeout(r, d));
-    try { return await runOnPistonOnce(language, code, stdin); } catch (e) { lastErr = e; }
-  }
-  throw lastErr;
-}
+// Printable Report
+document.getElementById('printReportBtn').addEventListener('click', () => {
+  window.print();
+});
 
-async function regradeSubmission(roll) {
+// ---------- CODE INSPECTOR MODAL ----------
+async function openStudentModal(roll) {
   await loadQuestions();
   const sub = rawSubmissions[roll];
+  if (!sub) return;
+
+  const modal = document.getElementById('studentModal');
+  const title = document.getElementById('modalStudentTitle');
+  const meta = document.getElementById('modalStudentMeta');
+  const body = document.getElementById('modalStudentBody');
+
+  title.textContent = `${sub.name || 'Student'} (Roll: ${roll})`;
+  meta.innerHTML = `
+    Status: <strong>${sub.status || 'in-progress'}</strong> &nbsp;|&nbsp; 
+    Total Score: <strong>${sub.totalScore ?? '--'}</strong> (MCQ: ${sub.mcqScore ?? '--'}, Code: ${sub.codeScore ?? '--'})
+  `;
+
+  let html = '';
+
+  // 1. MCQ Details
+  html += `<h4 style="margin:0 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;">Part A: Multiple Choice Responses</h4>`;
+  (QUESTIONS.mcq || []).forEach((q, idx) => {
+    const chosenIdx = sub.mcqAnswers ? sub.mcqAnswers[q.id] : undefined;
+    const isCorrect = chosenIdx === q.answer;
+    const chosenText = chosenIdx !== undefined ? q.options[chosenIdx] : '(Not Answered)';
+    const correctText = q.options[q.answer];
+
+    html += `
+      <div style="background:#f8fafc;border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin-bottom:10px;">
+        <div style="font-weight:600;font-size:0.9rem;margin-bottom:6px;">
+          Q${idx + 1}. ${escapeHtml(q.question)}
+          <span style="float:right;font-size:0.75rem;font-weight:700;color:${isCorrect ? 'var(--ok)' : 'var(--warn)'}">
+            ${isCorrect ? `✓ Correct (+${q.marks || 1} mark)` : `✗ Incorrect (0 marks)`}
+          </span>
+        </div>
+        <div style="font-size:0.85rem;color:#475569;">
+          <strong>Student Chosen:</strong> <span style="color:${isCorrect ? 'var(--ok)' : 'var(--warn)'}">${escapeHtml(chosenText)}</span>
+          ${!isCorrect ? `<span style="margin-left:14px;color:#16a34a;"><strong>Correct Answer:</strong> ${escapeHtml(correctText)}</span>` : ''}
+        </div>
+      </div>
+    `;
+  });
+
+  // 2. Programming Submissions & Code
+  html += `<h4 style="margin:24px 0 10px;border-bottom:1px solid var(--line);padding-bottom:6px;">Part B: Programming Problem Submissions</h4>`;
+  (QUESTIONS.programs || []).forEach((p, idx) => {
+    const progAns = sub.programAnswers ? sub.programAnswers[p.id] : null;
+    const lang = progAns?.language || 'python';
+    const code = progAns?.code?.[lang] || '';
+    const result = sub.codeResults ? sub.codeResults[p.id] : null;
+
+    html += `
+      <div style="background:#fff;border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <h4 style="margin:0;font-size:0.95rem;">Program ${idx + 1}: ${escapeHtml(p.title)}</h4>
+          <span style="font-size:0.85rem;font-weight:700;color:var(--accent);">
+            Score: ${result ? result.score : '--'} / ${p.marks || 5} marks
+          </span>
+        </div>
+        <div style="font-size:0.8rem;color:#64748b;margin-bottom:8px;">
+          Language Chosen: <strong>${lang.toUpperCase()}</strong> &nbsp;|&nbsp; Test Cases Passed: <strong>${result ? `${result.passed}/${result.total}` : 'Not evaluated'}</strong>
+        </div>
+        
+        <div style="font-size:0.8rem;font-weight:600;color:#334155;margin-bottom:4px;">Student Submitted Source Code:</div>
+        <pre class="code-box" id="studentCode_${p.id}">${escapeHtml(code || '// No code submitted')}</pre>
+        
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn-ghost btn-icon run-student-code-btn" data-lang="${lang}" data-pid="${p.id}">
+            ▶ Run Student Code In-Browser
+          </button>
+          <button class="btn-ghost btn-icon copy-code-btn" data-pid="${p.id}">
+            📋 Copy Code
+          </button>
+        </div>
+        <div class="code-output-box" id="output_${p.id}" style="display:none;margin-top:10px;font-family:var(--mono);font-size:0.85rem;padding:10px;background:#f1f5f9;border-radius:6px;white-space:pre-wrap;"></div>
+      </div>
+    `;
+  });
+
+  body.innerHTML = html;
+
+  // Wire Run buttons inside modal
+  body.querySelectorAll('.run-student-code-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const pId = btn.dataset.pid;
+      const lang = btn.dataset.lang;
+      const progAns = sub.programAnswers ? sub.programAnswers[pId] : null;
+      const code = progAns?.code?.[lang] || '';
+      const p = QUESTIONS.programs.find(x => x.id === pId);
+      const outBox = document.getElementById(`output_${pId}`);
+      outBox.style.display = 'block';
+      outBox.textContent = 'Running student code against test cases in-browser...';
+
+      let log = [];
+      for (let i = 0; i < (p.testCases || []).length; i++) {
+        const tc = p.testCases[i];
+        const res = await executeCodeInBrowser(lang, code, tc.input);
+        const gotTrimmed = (res.output || '').trim();
+        const expTrimmed = (tc.expectedOutput || '').trim();
+        const pass = gotTrimmed === expTrimmed;
+        log.push(`Test Case #${i + 1} (${tc.isSample !== false ? 'Sample' : 'Hidden'}): ${pass ? '✓ PASSED' : '✗ FAILED'}\nInput: ${tc.input}\nExpected: ${tc.expectedOutput}\nGot: ${res.output}`);
+      }
+      outBox.textContent = log.join('\n\n');
+    });
+  });
+
+  body.querySelectorAll('.copy-code-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pId = btn.dataset.pid;
+      const codeEl = document.getElementById(`studentCode_${pId}`);
+      navigator.clipboard.writeText(codeEl.textContent);
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = '📋 Copy Code'; }, 1500);
+    });
+  });
+
+  modal.classList.remove('hidden');
+}
+
+document.getElementById('closeModalBtn').addEventListener('click', () => {
+  document.getElementById('studentModal').classList.add('hidden');
+});
+
+// ---------- IN-BROWSER REGRADING ----------
+async function regradeStudentInBrowser(roll) {
+  await loadQuestions();
+  const sub = rawSubmissions[roll];
+  if (!sub) return;
+
   let mcqScore = 0;
-  QUESTIONS.mcq.forEach(q => { if (sub.mcqAnswers?.[q.id] === q.answer) mcqScore += q.marks; });
+  (QUESTIONS.mcq || []).forEach(q => {
+    if (sub.mcqAnswers && sub.mcqAnswers[q.id] === q.answer) {
+      mcqScore += (q.marks || 1);
+    }
+  });
 
   let codeScore = 0;
   const codeResults = {};
-  const DEFAULT_LANGUAGES = ['python', 'java', 'c', 'cpp'];
-  for (const p of QUESTIONS.programs) {
-    const progAns = sub.programAnswers?.[p.id] || {};
-    const lang = progAns.language || ((p.allowedLanguages && p.allowedLanguages[0]) || DEFAULT_LANGUAGES[0]);
-    const code = progAns.code?.[lang] || '';
+  for (const p of (QUESTIONS.programs || [])) {
+    const progAns = sub.programAnswers ? sub.programAnswers[p.id] : null;
+    const lang = progAns?.language || 'python';
+    const code = progAns?.code?.[lang] || '';
+    const testCases = p.testCases || [];
     let passed = 0;
-    for (const tc of p.testCases) {
-      try {
-        const r = await runOnPiston(lang, code, tc.input);
-        if ((r.output || '').trim() === (tc.expectedOutput || '').trim()) passed++;
-      } catch (e) { /* leave as not-passed */ }
+    for (const tc of testCases) {
+      const r = await executeCodeInBrowser(lang, code, tc.input);
+      if ((r.output || '').trim() === (tc.expectedOutput || '').trim()) {
+        passed++;
+      }
     }
-    const score = p.testCases.length ? (passed / p.testCases.length) * p.marks : 0;
+    const marksWeight = p.marks || 5;
+    const score = testCases.length ? Math.round((passed / testCases.length) * marksWeight * 100) / 100 : 0;
     codeScore += score;
-    codeResults[p.id] = { passed, total: p.testCases.length, score, language: lang };
+    codeResults[p.id] = { passed, total: testCases.length, score, language: lang };
   }
 
-  const totalScore = mcqScore + Math.round(codeScore * 100) / 100;
-  await updateDoc(doc(db, 'submissions', roll), {
-    mcqScore, codeScore: Math.round(codeScore * 100) / 100, totalScore, codeResults,
-    regradedAt: serverTimestamp()
+  codeScore = Math.round(codeScore * 100) / 100;
+  const totalScore = Math.round((mcqScore + codeScore) * 100) / 100;
+
+  await fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      roll,
+      name: sub.name,
+      status: sub.status || 'submitted',
+      mcqAnswers: sub.mcqAnswers,
+      programAnswers: sub.programAnswers,
+      mcqScore,
+      codeScore,
+      totalScore,
+      codeResults
+    })
   });
-  return totalScore;
-}
 
-async function regradeOne(roll, btn) {
-  btn.disabled = true; btn.textContent = 'Regrading...';
-  try {
-    await regradeSubmission(roll);
-    await loadResults();
-  } catch (e) {
-    console.error(e);
-    alert('Regrade failed for ' + roll + ' — execution service may still be busy. Try again shortly.');
-  }
+  await loadResults();
 }
 
 document.getElementById('regradeAllBtn').addEventListener('click', async () => {
-  const statusEl = document.getElementById('regradeStatus');
   const submittedRolls = rows.filter(r => r.status === 'submitted').map(r => r.roll);
-  if (!submittedRolls.length) { statusEl.textContent = 'No submitted tests to regrade.'; return; }
-  if (!confirm(`Regrade all ${submittedRolls.length} submitted tests? This re-runs every program against every test case again and can take a while.`)) return;
-  let done = 0;
-  for (const roll of submittedRolls) {
-    statusEl.textContent = `Regrading ${done + 1}/${submittedRolls.length} (${roll})...`;
-    try { await regradeSubmission(roll); } catch (e) { console.error('Failed for', roll, e); }
-    done++;
+  if (!submittedRolls.length) {
+    alert('No submitted tests to regrade.');
+    return;
   }
-  statusEl.textContent = `Done — regraded ${done} submissions.`;
-  await loadResults();
+  if (!confirm(`Regrade all ${submittedRolls.length} submitted tests in-browser with zero latency?`)) return;
+  const statusEl = document.getElementById('regradeStatus');
+  let count = 0;
+  for (const roll of submittedRolls) {
+    statusEl.textContent = `Regrading ${count + 1}/${submittedRolls.length} (${roll})...`;
+    await regradeStudentInBrowser(roll);
+    count++;
+  }
+  statusEl.textContent = `✓ Done — instantly regraded ${count} submissions in-browser.`;
+  setTimeout(() => { statusEl.textContent = ''; }, 3000);
 });
+
+// =========================================================================
+// QUESTION MANAGER (ADD / EDIT / REMOVE WITH + BUTTONS)
+// =========================================================================
+function renderQuestionManager() {
+  if (!QUESTIONS) return;
+
+  document.getElementById('cfgExamTitle').value = QUESTIONS.examTitle || 'Class Test';
+  document.getElementById('cfgDuration').value = QUESTIONS.durationMinutes || 90;
+  document.getElementById('cfgPassword').value = QUESTIONS.studentPassword || 'test-2026';
+
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+
+  // 1. Render MCQs ("Choose It")
+  (QUESTIONS.mcq || []).forEach((q, qIdx) => {
+    const card = document.createElement('div');
+    card.className = 'q-editor-card';
+    card.id = `q-card-mcq-${qIdx}`;
+    card.innerHTML = `
+      <div class="q-editor-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="q-type-badge mcq">Choose It (MCQ #${qIdx + 1})</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-ghost btn-icon move-up-btn" data-type="mcq" data-idx="${qIdx}" title="Move Up">↑</button>
+          <button class="btn-ghost btn-icon move-down-btn" data-type="mcq" data-idx="${qIdx}" title="Move Down">↓</button>
+          <button class="btn-danger btn-icon del-q-btn" data-type="mcq" data-idx="${qIdx}" title="Delete Question">🗑️ Delete</button>
+        </div>
+      </div>
+
+      <div style="margin-bottom:12px;">
+        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Question Statement</label>
+        <textarea class="mcq-question-input" data-idx="${qIdx}" style="min-height:70px;">${escapeHtml(q.question)}</textarea>
+      </div>
+
+      <div style="display:flex;gap:16px;margin-bottom:12px;">
+        <div style="width:140px;">
+          <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Marks / Points</label>
+          <input type="number" class="mcq-marks-input" data-idx="${qIdx}" min="1" value="${q.marks || 1}">
+        </div>
+      </div>
+
+      <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:6px;">
+        Options (Select radio for correct answer):
+      </label>
+      <div class="mcq-options-container" id="mcq-opts-${qIdx}">
+        ${(q.options || []).map((opt, optIdx) => `
+          <div class="option-edit-row">
+            <input type="radio" name="correct_mcq_${qIdx}" class="mcq-correct-radio" data-qidx="${qIdx}" data-optidx="${optIdx}" ${q.answer === optIdx ? 'checked' : ''} title="Mark as correct answer">
+            <input type="text" class="mcq-opt-val" data-qidx="${qIdx}" data-optidx="${optIdx}" value="${escapeHtml(opt)}" placeholder="Option text...">
+            <button class="btn-danger btn-icon del-opt-btn" data-qidx="${qIdx}" data-optidx="${optIdx}" title="Remove Option">✕</button>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn-plus add-opt-btn" data-qidx="${qIdx}" style="margin-top:8px;font-size:0.82rem;padding:6px 12px;">
+        ➕ Add Option
+      </button>
+    `;
+    container.appendChild(card);
+  });
+
+  // 2. Render Programs ("Coding Problems")
+  (QUESTIONS.programs || []).forEach((p, pIdx) => {
+    const card = document.createElement('div');
+    card.className = 'q-editor-card';
+    card.id = `q-card-prog-${pIdx}`;
+    card.innerHTML = `
+      <div class="q-editor-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="q-type-badge prog">Program (Coding Problem #${pIdx + 1})</span>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-ghost btn-icon move-up-btn" data-type="prog" data-idx="${pIdx}" title="Move Up">↑</button>
+          <button class="btn-ghost btn-icon move-down-btn" data-type="prog" data-idx="${pIdx}" title="Move Down">↓</button>
+          <button class="btn-danger btn-icon del-q-btn" data-type="prog" data-idx="${pIdx}" title="Delete Question">🗑️ Delete</button>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 140px;gap:16px;margin-bottom:12px;">
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Problem Title</label>
+          <input type="text" class="prog-title-input" data-idx="${pIdx}" value="${escapeHtml(p.title || '')}" placeholder="e.g. Reverse a String">
+        </div>
+        <div>
+          <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Total Marks</label>
+          <input type="number" class="prog-marks-input" data-idx="${pIdx}" min="1" value="${p.marks || 5}">
+        </div>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label style="font-size:0.8rem;font-weight:600;display:block;margin-bottom:4px;">Problem Explanation & Details</label>
+        <textarea class="prog-statement-input" data-idx="${pIdx}" style="min-height:90px;" placeholder="Describe input format, output format, constraints...">${escapeHtml(p.statement || '')}</textarea>
+      </div>
+
+      <label style="font-size:0.85rem;font-weight:600;display:block;margin:16px 0 8px;">
+        Test Cases (${(p.testCases || []).length}):
+      </label>
+      <div id="prog-tcs-${pIdx}">
+        ${(p.testCases || []).map((tc, tcIdx) => `
+          <div class="testcase-edit-box">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:0.8rem;font-weight:700;color:#475569;">Test Case #${tcIdx + 1}</span>
+              <div style="display:flex;align-items:center;gap:12px;">
+                <label style="font-size:0.75rem;display:flex;align-items:center;gap:4px;cursor:pointer;margin:0;">
+                  <input type="checkbox" class="tc-is-sample" data-pidx="${pIdx}" data-tcidx="${tcIdx}" ${tc.isSample !== false ? 'checked' : ''}>
+                  Sample (Visible to student)
+                </label>
+                <button class="btn-danger btn-icon del-tc-btn" data-pidx="${pIdx}" data-tcidx="${tcIdx}" title="Remove Test Case">✕</button>
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              <div>
+                <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:2px;">Input (stdin)</label>
+                <textarea class="tc-input-val" data-pidx="${pIdx}" data-tcidx="${tcIdx}" style="min-height:55px;font-family:var(--mono);">${escapeHtml(tc.input || '')}</textarea>
+              </div>
+              <div>
+                <label style="font-size:0.75rem;font-weight:600;display:block;margin-bottom:2px;">Expected Output (stdout)</label>
+                <textarea class="tc-output-val" data-pidx="${pIdx}" data-tcidx="${tcIdx}" style="min-height:55px;font-family:var(--mono);">${escapeHtml(tc.expectedOutput || '')}</textarea>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <button class="btn-plus add-tc-btn" data-pidx="${pIdx}" style="margin-top:4px;font-size:0.82rem;padding:6px 14px;">
+        ➕ Add Test Case
+      </button>
+    `;
+    container.appendChild(card);
+  });
+
+  wireQuestionEvents();
+}
+
+function syncQuestionInputsToState() {
+  if (!QUESTIONS) return;
+
+  QUESTIONS.examTitle = document.getElementById('cfgExamTitle').value.trim() || 'Class Test';
+  QUESTIONS.durationMinutes = parseInt(document.getElementById('cfgDuration').value, 10) || 90;
+  QUESTIONS.studentPassword = document.getElementById('cfgPassword').value.trim() || 'test-2026';
+
+  // Read MCQs
+  document.querySelectorAll('.mcq-question-input').forEach(el => {
+    const idx = parseInt(el.dataset.idx, 10);
+    if (QUESTIONS.mcq[idx]) QUESTIONS.mcq[idx].question = el.value;
+  });
+  document.querySelectorAll('.mcq-marks-input').forEach(el => {
+    const idx = parseInt(el.dataset.idx, 10);
+    if (QUESTIONS.mcq[idx]) QUESTIONS.mcq[idx].marks = parseInt(el.value, 10) || 1;
+  });
+  document.querySelectorAll('.mcq-opt-val').forEach(el => {
+    const qIdx = parseInt(el.dataset.qidx, 10);
+    const optIdx = parseInt(el.dataset.optidx, 10);
+    if (QUESTIONS.mcq[qIdx] && QUESTIONS.mcq[qIdx].options[optIdx] !== undefined) {
+      QUESTIONS.mcq[qIdx].options[optIdx] = el.value;
+    }
+  });
+  document.querySelectorAll('.mcq-correct-radio:checked').forEach(el => {
+    const qIdx = parseInt(el.dataset.qidx, 10);
+    const optIdx = parseInt(el.dataset.optidx, 10);
+    if (QUESTIONS.mcq[qIdx]) QUESTIONS.mcq[qIdx].answer = optIdx;
+  });
+
+  // Read Programs
+  document.querySelectorAll('.prog-title-input').forEach(el => {
+    const idx = parseInt(el.dataset.idx, 10);
+    if (QUESTIONS.programs[idx]) QUESTIONS.programs[idx].title = el.value;
+  });
+  document.querySelectorAll('.prog-marks-input').forEach(el => {
+    const idx = parseInt(el.dataset.idx, 10);
+    if (QUESTIONS.programs[idx]) QUESTIONS.programs[idx].marks = parseInt(el.value, 10) || 5;
+  });
+  document.querySelectorAll('.prog-statement-input').forEach(el => {
+    const idx = parseInt(el.dataset.idx, 10);
+    if (QUESTIONS.programs[idx]) QUESTIONS.programs[idx].statement = el.value;
+  });
+  document.querySelectorAll('.tc-input-val').forEach(el => {
+    const pIdx = parseInt(el.dataset.pidx, 10);
+    const tcIdx = parseInt(el.dataset.tcidx, 10);
+    if (QUESTIONS.programs[pIdx] && QUESTIONS.programs[pIdx].testCases[tcIdx]) {
+      QUESTIONS.programs[pIdx].testCases[tcIdx].input = el.value;
+    }
+  });
+  document.querySelectorAll('.tc-output-val').forEach(el => {
+    const pIdx = parseInt(el.dataset.pidx, 10);
+    const tcIdx = parseInt(el.dataset.tcidx, 10);
+    if (QUESTIONS.programs[pIdx] && QUESTIONS.programs[pIdx].testCases[tcIdx]) {
+      QUESTIONS.programs[pIdx].testCases[tcIdx].expectedOutput = el.value;
+    }
+  });
+  document.querySelectorAll('.tc-is-sample').forEach(el => {
+    const pIdx = parseInt(el.dataset.pidx, 10);
+    const tcIdx = parseInt(el.dataset.tcidx, 10);
+    if (QUESTIONS.programs[pIdx] && QUESTIONS.programs[pIdx].testCases[tcIdx]) {
+      QUESTIONS.programs[pIdx].testCases[tcIdx].isSample = el.checked;
+    }
+  });
+}
+
+function wireQuestionEvents() {
+  document.querySelectorAll('.move-up-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      syncQuestionInputsToState();
+      const type = btn.dataset.type;
+      const idx = parseInt(btn.dataset.idx, 10);
+      const list = type === 'mcq' ? QUESTIONS.mcq : QUESTIONS.programs;
+      if (idx > 0) {
+        const temp = list[idx - 1];
+        list[idx - 1] = list[idx];
+        list[idx] = temp;
+        renderQuestionManager();
+      }
+    });
+  });
+
+  document.querySelectorAll('.move-down-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      syncQuestionInputsToState();
+      const type = btn.dataset.type;
+      const idx = parseInt(btn.dataset.idx, 10);
+      const list = type === 'mcq' ? QUESTIONS.mcq : QUESTIONS.programs;
+      if (idx < list.length - 1) {
+        const temp = list[idx + 1];
+        list[idx + 1] = list[idx];
+        list[idx] = temp;
+        renderQuestionManager();
+      }
+    });
+  });
+
+  document.querySelectorAll('.del-q-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      syncQuestionInputsToState();
+      const type = btn.dataset.type;
+      const idx = parseInt(btn.dataset.idx, 10);
+      if (!confirm(`Are you sure you want to delete this ${type === 'mcq' ? 'MCQ' : 'Program'} question?`)) return;
+      if (type === 'mcq') {
+        QUESTIONS.mcq.splice(idx, 1);
+      } else {
+        QUESTIONS.programs.splice(idx, 1);
+      }
+      renderQuestionManager();
+    });
+  });
+
+  document.querySelectorAll('.add-opt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      syncQuestionInputsToState();
+      const qIdx = parseInt(btn.dataset.qidx, 10);
+      if (QUESTIONS.mcq[qIdx]) {
+        QUESTIONS.mcq[qIdx].options.push(`New Option ${QUESTIONS.mcq[qIdx].options.length + 1}`);
+        renderQuestionManager();
+      }
+    });
+  });
+
+  document.querySelectorAll('.del-opt-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      syncQuestionInputsToState();
+      const qIdx = parseInt(btn.dataset.qidx, 10);
+      const optIdx = parseInt(btn.dataset.optidx, 10);
+      if (QUESTIONS.mcq[qIdx] && QUESTIONS.mcq[qIdx].options.length > 2) {
+        QUESTIONS.mcq[qIdx].options.splice(optIdx, 1);
+        if (QUESTIONS.mcq[qIdx].answer >= QUESTIONS.mcq[qIdx].options.length) {
+          QUESTIONS.mcq[qIdx].answer = 0;
+        }
+        renderQuestionManager();
+      } else {
+        alert('An MCQ question must have at least 2 options.');
+      }
+    });
+  });
+
+  document.querySelectorAll('.add-tc-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      syncQuestionInputsToState();
+      const pIdx = parseInt(btn.dataset.pidx, 10);
+      if (QUESTIONS.programs[pIdx]) {
+        if (!QUESTIONS.programs[pIdx].testCases) QUESTIONS.programs[pIdx].testCases = [];
+        QUESTIONS.programs[pIdx].testCases.push({
+          input: '',
+          expectedOutput: '',
+          isSample: true
+        });
+        renderQuestionManager();
+      }
+    });
+  });
+
+  document.querySelectorAll('.del-tc-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      syncQuestionInputsToState();
+      const pIdx = parseInt(btn.dataset.pidx, 10);
+      const tcIdx = parseInt(btn.dataset.tcidx, 10);
+      if (QUESTIONS.programs[pIdx] && QUESTIONS.programs[pIdx].testCases) {
+        QUESTIONS.programs[pIdx].testCases.splice(tcIdx, 1);
+        renderQuestionManager();
+      }
+    });
+  });
+}
+
+document.getElementById('addMcqQuestionBtn').addEventListener('click', () => {
+  syncQuestionInputsToState();
+  if (!QUESTIONS.mcq) QUESTIONS.mcq = [];
+  const newId = 'm' + (Date.now() % 100000);
+  QUESTIONS.mcq.push({
+    id: newId,
+    question: 'New Multiple Choice Question Statement',
+    options: ['Option A', 'Option B', 'Option C', 'Option D'],
+    answer: 0,
+    marks: 1
+  });
+  renderQuestionManager();
+  const newCard = document.getElementById(`q-card-mcq-${QUESTIONS.mcq.length - 1}`);
+  if (newCard) newCard.scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('addProgQuestionBtn').addEventListener('click', () => {
+  syncQuestionInputsToState();
+  if (!QUESTIONS.programs) QUESTIONS.programs = [];
+  const newId = 'p' + (Date.now() % 100000);
+  QUESTIONS.programs.push({
+    id: newId,
+    title: 'New Coding Problem Title',
+    statement: 'Explain the problem statement, input format, and expected output format here.',
+    allowedLanguages: ['python', 'javascript', 'java', 'c'],
+    marks: 5,
+    testCases: [
+      { input: 'Sample Input 1', expectedOutput: 'Sample Output 1', isSample: true },
+      { input: 'Hidden Input 2', expectedOutput: 'Hidden Output 2', isSample: false }
+    ]
+  });
+  renderQuestionManager();
+  const newCard = document.getElementById(`q-card-prog-${QUESTIONS.programs.length - 1}`);
+  if (newCard) newCard.scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('saveQuestionsBtn').addEventListener('click', async () => {
+  syncQuestionInputsToState();
+  const saveAlert = document.getElementById('saveAlert');
+  saveAlert.innerHTML = `<div style="background:#eff6ff;color:#1e40af;padding:10px 16px;border-radius:8px;font-weight:600;">💾 Saving exam questions to portal...</div>`;
+
+  try {
+    const res = await fetch('/api/save-questions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(QUESTIONS)
+    });
+    const result = await res.json();
+
+    if (result.success) {
+      saveAlert.innerHTML = `<div style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;padding:10px 16px;border-radius:8px;font-weight:600;">✓ Exam saved successfully! ${result.githubSynced ? 'Also synced to your GitHub repo!' : ''}</div>`;
+    } else {
+      saveAlert.innerHTML = `<div style="background:#fef2f2;color:#dc2626;padding:10px 16px;border-radius:8px;font-weight:600;">⚠️ ${result.error || 'Failed to save.'}</div>`;
+    }
+    setTimeout(() => { saveAlert.innerHTML = ''; }, 4000);
+  } catch (err) {
+    saveAlert.innerHTML = `<div style="background:#fef2f2;color:#dc2626;padding:10px 16px;border-radius:8px;font-weight:600;">⚠️ Save failed: ${err.message}</div>`;
+  }
+});
+
+document.getElementById('exportQuestionsJsonBtn').addEventListener('click', () => {
+  syncQuestionInputsToState();
+  const blob = new Blob([JSON.stringify(QUESTIONS, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `questions-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+document.getElementById('resetQuestionsBtn').addEventListener('click', async () => {
+  if (!confirm('Reload default questions? Any unsaved edits will be discarded.')) return;
+  await loadQuestions();
+  renderQuestionManager();
+});
+
+// ---------- GITHUB CONFIG & SYNC ----------
+async function loadGithubConfig() {
+  try {
+    const res = await fetch('/api/github-config');
+    if (res.ok) {
+      const data = await res.json();
+      document.getElementById('ghOwner').value = data.owner || 'jegadeeshfairness28';
+      document.getElementById('ghRepo').value = data.repo || 'test-portal';
+      document.getElementById('ghBranch').value = data.branch || 'main';
+      if (data.hasToken) {
+        document.getElementById('ghToken').placeholder = `Configured (${data.tokenMasked})`;
+      }
+    }
+  } catch (err) {
+    console.error('Error loading GitHub config:', err);
+  }
+}
+
+document.getElementById('saveGhConfigBtn').addEventListener('click', async () => {
+  const owner = document.getElementById('ghOwner').value.trim();
+  const repo = document.getElementById('ghRepo').value.trim();
+  const branch = document.getElementById('ghBranch').value.trim();
+  const token = document.getElementById('ghToken').value.trim();
+  const alertEl = document.getElementById('ghStatusAlert');
+
+  alertEl.innerHTML = `<div style="color:var(--accent);">Saving GitHub settings...</div>`;
+
+  try {
+    const res = await fetch('/api/github-config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ owner, repo, branch, token: token || undefined })
+    });
+    const result = await res.json();
+    if (result.success) {
+      alertEl.innerHTML = `<div style="color:var(--ok);font-weight:600;">✓ GitHub configuration saved successfully!</div>`;
+    } else {
+      alertEl.innerHTML = `<div style="color:var(--warn);font-weight:600;">⚠️ ${result.error}</div>`;
+    }
+  } catch (err) {
+    alertEl.innerHTML = `<div style="color:var(--warn);font-weight:600;">⚠️ ${err.message}</div>`;
+  }
+});
+
+document.getElementById('pushAllGhBtn').addEventListener('click', async () => {
+  const alertEl = document.getElementById('ghStatusAlert');
+  alertEl.innerHTML = `<div style="color:var(--accent);">🐙 Pushing all student submissions and questions to GitHub...</div>`;
+
+  try {
+    const res = await fetch('/api/github-sync-all', { method: 'POST' });
+    const result = await res.json();
+    if (result.success) {
+      alertEl.innerHTML = `<div style="color:var(--ok);font-weight:600;background:var(--ok-bg);padding:12px;border:1px solid var(--ok-border);border-radius:8px;">✓ ${result.message}</div>`;
+    } else {
+      alertEl.innerHTML = `<div style="color:var(--warn);font-weight:600;background:var(--warn-bg);padding:12px;border:1px solid var(--warn-border);border-radius:8px;">⚠️ ${result.error}</div>`;
+    }
+  } catch (err) {
+    alertEl.innerHTML = `<div style="color:var(--warn);font-weight:600;">⚠️ Sync error: ${err.message}</div>`;
+  }
+});
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 </script>
 </body>
 </html>

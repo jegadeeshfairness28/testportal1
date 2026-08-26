@@ -1,17 +1,18 @@
 {
   "examTitle": "Class Test",
   "durationMinutes": 90,
+  "studentPassword": "test-2026",
   "mcq": [
     {
       "id": "m1",
-      "question": "Which keyword is used to inherit a class in Java?",
+      "question": "Which keyword is used to inherit a class in object-oriented programming?",
       "options": ["implements", "extends", "inherits", "super"],
       "answer": 1,
       "marks": 1
     },
     {
       "id": "m2",
-      "question": "What is the time complexity of binary search?",
+      "question": "What is the time complexity of binary search on a sorted array of size n?",
       "options": ["O(n)", "O(log n)", "O(n log n)", "O(1)"],
       "answer": 1,
       "marks": 1
@@ -21,34 +22,27 @@
     {
       "id": "p1",
       "title": "Sum of Two Numbers",
-      "statement": "Read two integers from input (space separated on one line) and print their sum.",
-      "allowedLanguages": ["python", "java", "c", "cpp"],
+      "statement": "Read two space-separated integers from input and print their sum.",
+      "allowedLanguages": ["python", "javascript", "java", "c"],
       "marks": 5,
       "testCases": [
-        { "input": "2 3", "expectedOutput": "5" },
-        { "input": "10 -4", "expectedOutput": "6" },
-        { "input": "0 0", "expectedOutput": "0" }
+        { "input": "2 3", "expectedOutput": "5", "isSample": true },
+        { "input": "10 -4", "expectedOutput": "6", "isSample": true },
+        { "input": "100 250", "expectedOutput": "350", "isSample": false },
+        { "input": "0 0", "expectedOutput": "0", "isSample": false }
       ]
     },
     {
       "id": "p2",
       "title": "Reverse a String",
-      "statement": "Read a single line string and print it reversed.",
-      "allowedLanguages": ["python", "java", "c", "cpp"],
+      "statement": "Read a single line string from input and print it reversed.",
+      "allowedLanguages": ["python", "javascript", "java", "c"],
       "marks": 5,
       "testCases": [
-        { "input": "hello", "expectedOutput": "olleh" },
-        { "input": "coding", "expectedOutput": "gnidoc" }
+        { "input": "hello", "expectedOutput": "olleh", "isSample": true },
+        { "input": "coding", "expectedOutput": "gnidoc", "isSample": true },
+        { "input": "racecar", "expectedOutput": "racecar", "isSample": false }
       ]
     }
-  ],
-  "_notes": [
-    "Add more items to 'mcq' (up to 100) and 'programs' (up to 15) following the same shape.",
-    "allowedLanguages controls which languages the STUDENT can pick from for that program (any subset of python, java, c, cpp). Omit the field entirely to allow all four.",
-    "There is no per-question starter code anymore — each language gets a generic starter skeleton built into the app, and the student writes their solution in whichever language they choose.",
-    "testCases[].expectedOutput must be identical regardless of which language is used, since input/output behavior (stdin -> stdout) is what's being checked, not the code itself.",
-    "testCases[].expectedOutput is compared after trimming trailing whitespace/newlines on both sides.",
-    "marks is per-question weight used to compute the total score.",
-    "This file is loaded directly by index.html and admin.html — no upload step needed, just edit and push to GitHub."
   ]
 }
